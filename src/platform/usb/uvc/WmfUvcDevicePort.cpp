@@ -207,6 +207,12 @@ bool WmfUvcDevicePort::getPu(uint32_t propertyId, int32_t &retValue) {
     if(powerState_ != kD0) {
         setPowerStateD0();
     }
+    // If the device doesn't support IAMVideoProcAmp (e.g. CR-Scan Ferret),
+    // return false instead of throwing to avoid crashing during init.
+    if(!videoProc_.p && !cameraControl_.p) {
+        retValue = 0;
+        return false;
+    }
     long val = 0, flags = 0;
     if((propertyId == OB_PROP_COLOR_EXPOSURE_INT) || (propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL)) {
         auto hr = getCameraControl()->Get(CameraControl_Exposure, &val, &flags);
@@ -251,6 +257,9 @@ bool WmfUvcDevicePort::setPu(uint32_t propertyId, int32_t tarValue) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
+    }
+    if(!videoProc_.p && !cameraControl_.p) {
+        return false;
     }
     if(propertyId == OB_PROP_COLOR_EXPOSURE_INT) {
         auto hr = getCameraControl()->Set(CameraControl_Exposure, exposure_value_to_exponent(tarValue), CameraControl_Flags_Manual);
@@ -362,6 +371,9 @@ UvcControlRange WmfUvcDevicePort::getPuRange(uint32_t propertyId) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
+    }
+    if(!videoProc_.p && !cameraControl_.p) {
+        return UvcControlRange(0, 0, 0, 0);
     }
 
     if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL || propertyId == OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL) {

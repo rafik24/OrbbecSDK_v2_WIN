@@ -87,11 +87,21 @@ void DabaiADevice::init() {
     auto depthWorkModeManager = std::make_shared<G330DepthWorkModeManager>(this);
     registerComponent(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER, depthWorkModeManager);
 
-    auto presetManager = std::make_shared<DaBaiAPresetManager>(this);
-    registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
+    try {
+        auto presetManager = std::make_shared<DaBaiAPresetManager>(this);
+        registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
+    }
+    catch(const std::exception &e) {
+        LOG_WARN("PresetManager init failed (non-fatal for Ferret): {}", e.what());
+    }
 
-    auto algParamManager = std::make_shared<DaBaiAAlgParamManager>(this);
-    registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
+    try {
+        auto algParamManager = std::make_shared<DaBaiAAlgParamManager>(this);
+        registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
+    }
+    catch(const std::exception &e) {
+        LOG_WARN("AlgParamManager init failed (non-fatal for Ferret): {}", e.what());
+    }
 
     if(getFirmwareVersionInt() >= 10700) {
         auto propertyServer                = getPropertyServer();
@@ -174,8 +184,10 @@ void DabaiADevice::init() {
                 auto        propServer           = getPropertyServer();
                 auto        currentWorkMode      = propServer->getStructureDataProtoV1_1_T<OBDepthWorkMode_Internal, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE);
                 std::string name(currentWorkMode.name);
-                auto        algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-                algParamManager->updateD2CProfileList(name);
+                auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+                if(algParamManager) {
+                    algParamManager->updateD2CProfileList(name);
+                }
                 // update preset version after switch depth algorithm mode
                 if(getFirmwareVersionInt() >= 10700) {
                     // support custom presets upgrade
@@ -288,8 +300,10 @@ void DabaiADevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        algParamManager->bindStreamProfileParams(profiles);
+        auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+        if(algParamManager) {
+            algParamManager->bindStreamProfileParams(profiles);
+        }
     }
 
     auto sensorType = sensor->getSensorType();
@@ -353,9 +367,11 @@ void DabaiADevice::initSensorList() {
 
                 sensor->registerStreamStateChangedCallback([&](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
                     if(state == STREAM_STATE_STREAMING) {
-                        auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-                        algParamManager->reFetchDisparityParams();
-                        algParamManager->bindDisparityParam({ sp });
+                        auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+                        if(algParamManager) {
+                            algParamManager->reFetchDisparityParams();
+                            algParamManager->bindDisparityParam({ sp });
+                        }
                     }
                 });
                 return sensor;
@@ -486,7 +502,10 @@ void DabaiADevice::initSensorList() {
         registerComponent(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR, [this, depthPortInfo]() {
             auto port          = getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
-            uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);  // update xu unit to g330 xu unit
+            // CR-Scan Ferret uses common XU unit (4), not G330 XU unit (3)
+            if(deviceInfo_->pid_ != OB_DEVICE_CR_SCAN_FERRET_PID) {
+                uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);
+            }
             auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);
             return accessor;
         });
@@ -495,7 +514,10 @@ void DabaiADevice::initSensorList() {
         registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, [this, depthPortInfo]() {
             auto port          = getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
-            uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);  // update xu unit to g330 xu unit
+            // CR-Scan Ferret uses common XU unit (4), not G330 XU unit (3)
+            if(deviceInfo_->pid_ != OB_DEVICE_CR_SCAN_FERRET_PID) {
+                uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);
+            }
             auto devMonitor = std::make_shared<DeviceMonitor>(this, port);
             return devMonitor;
         });
@@ -674,9 +696,11 @@ void                 DabaiADevice::initSensorListGMSL() {
 
                 sensor->registerStreamStateChangedCallback([&](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
                     if(state == STREAM_STATE_STREAMING) {
-                        auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-                        algParamManager->reFetchDisparityParams();
-                        algParamManager->bindDisparityParam({ sp });
+                        auto algParamManager = getComponentT<DaBaiAAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+                        if(algParamManager) {
+                            algParamManager->reFetchDisparityParams();
+                            algParamManager->bindDisparityParam({ sp });
+                        }
                     }
                 });
 
