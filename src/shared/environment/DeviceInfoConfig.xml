@@ -200,7 +200,6 @@
         <Device>CAM-5330</Device>
         <Device>CAM-5530</Device>
         <Device>CAM-5530b</Device>
-        <Device>CRScanFerret</Device>
         <!-- More devices can be added here -->
     </G330DeviceList>
 
@@ -238,7 +237,6 @@
         <Device>DaBaiAL</Device>
         <Device>Gemini345</Device>
         <Device>Gemini345Lg</Device>
-        <Device>CRScanFerret</Device>
         <!-- More devices can be added here -->
     </DaBaiAList>
 
