@@ -183,6 +183,7 @@ void FerretDevice::initSensorList() {
             [this, depthPortInfo]() {
                 auto port   = getSourcePort(depthPortInfo);
                 auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
+                sensor->enableTimestampAnomalyDetection(false);
 
                 // FrameUnpacker may not be available (privfilter not activated)
                 auto formatConverter = getSensorFrameFilter("FrameUnpacker", OB_SENSOR_DEPTH, false);
@@ -304,6 +305,7 @@ void FerretDevice::initSensorList() {
             [this, irPortInfo]() {
                 auto port   = getSourcePort(irPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR, port);
+                sensor->enableTimestampAnomalyDetection(false);
 
                 auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
                 sensor->setFrameTimestampCalculator(frameTimestampCalculator);
@@ -343,6 +345,7 @@ void FerretDevice::initSensorList() {
             [this, colorPortInfo]() {
                 auto port   = getSourcePort(colorPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
+                sensor->enableTimestampAnomalyDetection(false);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
