@@ -25,6 +25,8 @@ KNOWN_LOCATIONS = [
     r"D:\projects\orbbec\OrbbecViewer_v2.7.6_202602022045_20730ef_win_x64\extensions\frameprocessor\ob_frame_processor.dll",
     # pyorbbecsdk
     r"C:\Python313\Lib\site-packages\extensions\frameprocessor\ob_frame_processor.dll",
+    # RTAB-Map
+    r"C:\Program Files\RTABMap\bin\extensions\frameprocessor\ob_frame_processor.dll",
 ]
 
 OLD_PATTERN = bytes([0x08, 0x08, 0x09, 0x08])  # Gemini215 + Gemini210
