@@ -113,13 +113,20 @@ void FerretDevice::init() {
 }
 
 void FerretDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
-    auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER);
-    sensor->setStreamProfileFilter(streamProfileFilter.get());
+    // Apply stream profile filter to non-depth sensors only.
+    // The Ferret's effective stream profile list from firmware doesn't include
+    // depth formats correctly, causing all depth profiles to be filtered out.
+    auto sensorType = sensor->getSensorType();
+    if(sensorType != OB_SENSOR_DEPTH) {
+        auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER, false);
+        if(streamProfileFilter) {
+            sensor->setStreamProfileFilter(streamProfileFilter.get());
+        }
+    }
 
     auto        depthWorkModeManager = getComponentT<IDepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
     const auto &workMode             = depthWorkModeManager->getCurrentDepthWorkMode();
     std::string workModeName         = workMode.name;
-    auto        sensorType           = sensor->getSensorType();
     auto        streamProfile        = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType, workModeName);
     if(!streamProfile) {
         streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
