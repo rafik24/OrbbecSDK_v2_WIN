@@ -65,10 +65,13 @@ void FerretDevice::init() {
     initSensorList();
     initProperties();
 
-    // Set IR mirror to match the Ferret's default sensor orientation
+    // Set mirror defaults to match the Ferret's sensor orientation.
+    // All three video streams need mirroring for correct left-right orientation.
     TRY_EXECUTE({
         auto propServer = getPropertyServer();
         propServer->setPropertyValueT<bool>(OB_PROP_IR_MIRROR_BOOL, true);
+        propServer->setPropertyValueT<bool>(OB_PROP_DEPTH_MIRROR_BOOL, true);
+        propServer->setPropertyValueT<bool>(OB_PROP_COLOR_MIRROR_BOOL, true);
     });
 
     TRY_EXECUTE(fetchDeviceInfo());
