@@ -215,6 +215,29 @@ void FerretDevice::initSensorList() {
                     }
                 });
 
+                // Send vendor XU stream enable commands when depth streaming starts.
+                // The Ferret's structured light projector requires firmware activation
+                // via vendor properties before depth data will flow.
+                sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &) {
+                    if(state == STREAM_STATE_STARTING) {
+                        TRY_EXECUTE({
+                            auto propServer = getPropertyServer();
+                            propServer->setPropertyValueT<int>(0x0055, 1);  // Reset stream state
+                            propServer->setPropertyValueT<int>(0x000E, 1);  // Enable depth processing
+                            propServer->setPropertyValueT<int>(0x0051, 1);  // Enable IR/projector
+                            LOG_INFO("Ferret: vendor XU stream enable commands sent");
+                        });
+                    }
+                    else if(state == STREAM_STATE_STOPPED) {
+                        TRY_EXECUTE({
+                            auto propServer = getPropertyServer();
+                            propServer->setPropertyValueT<int>(0x004D, 1);  // Stop stream
+                            propServer->setPropertyValueT<int>(0x0003, 0);  // Laser off
+                            LOG_INFO("Ferret: vendor XU stream stop commands sent");
+                        });
+                    }
+                });
+
                 return sensor;
             },
             true);
