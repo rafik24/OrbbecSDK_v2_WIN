@@ -5,6 +5,7 @@
 #include "G2Device.hpp"
 #include "G2XLDevice.hpp"
 #include "G210Device.hpp"
+#include "FerretDevice.hpp"
 #include "G435LeDevice.hpp"
 #include "DevicePids.hpp"
 #include "utils/Utils.hpp"
@@ -98,7 +99,10 @@ std::shared_ptr<IDevice> G2DeviceInfo::createDevice(OBDeviceAccessMode accessMod
             }
             return std::make_shared<G2XLUSBDevice>(shared_from_this());
         }
-        else if(pid_ == 0x0808 || pid_ == 0x0809 || pid_ == 0x069C) {
+        else if(pid_ == 0x069C) {
+            return std::make_shared<FerretDevice>(shared_from_this());
+        }
+        else if(pid_ == 0x0808 || pid_ == 0x0809) {
             return std::make_shared<G210Device>(shared_from_this());
         }
     }

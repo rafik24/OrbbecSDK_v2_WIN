@@ -10,7 +10,12 @@
 
 namespace libobsensor {
 G2StreamProfileFilter::G2StreamProfileFilter(IDevice *owner) : DeviceComponentBase(owner) {
-    fetchEffectiveStreamProfiles();
+    try {
+        fetchEffectiveStreamProfiles();
+    }
+    catch(const std::exception &e) {
+        LOG_WARN("Failed to fetch effective stream profiles (non-fatal): {}", e.what());
+    }
 }
 
 static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamProfile> videoProfile, OBEffectiveStreamProfile effProfile) {
@@ -27,6 +32,12 @@ static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamPr
 }
 
 StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profiles) const {
+    // If effective profiles weren't loaded (e.g. Ferret firmware doesn't support the query),
+    // return all profiles unfiltered rather than returning an empty list.
+    if(effectiveStreamProfiles_.empty()) {
+        return profiles;
+    }
+
     StreamProfileList filteredProfiles;
 
     for(const auto &profile: profiles) {
@@ -41,7 +52,7 @@ StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profile
         for(auto &effProfile: effectiveStreamProfiles_) {
             if(isMatch(sensorType, videoProfile, effProfile)) {
                 filteredProfiles.push_back(profile);
-                continue;
+                break;
             }
         }
     }
