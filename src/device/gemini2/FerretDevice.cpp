@@ -65,6 +65,12 @@ void FerretDevice::init() {
     initSensorList();
     initProperties();
 
+    // Set IR mirror to match the Ferret's default sensor orientation
+    TRY_EXECUTE({
+        auto propServer = getPropertyServer();
+        propServer->setPropertyValueT<bool>(OB_PROP_IR_MIRROR_BOOL, true);
+    });
+
     TRY_EXECUTE(fetchDeviceInfo());
     TRY_EXECUTE(fetchExtensionInfo());
 
