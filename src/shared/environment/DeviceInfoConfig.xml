@@ -184,6 +184,12 @@
             <Name>Gemini 435Le</Name>
             <Manufacturer>Orbbec</Manufacturer>
         </Gemini435Le>
+        <CRScanFerret>
+            <VID>0x2BC5</VID>
+            <PID>0x069C</PID>
+            <Name>CR-Scan Ferret</Name>
+            <Manufacturer>Creality</Manufacturer>
+        </CRScanFerret>
         <!-- More devices can be added here -->
     </DevList>
 

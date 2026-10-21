@@ -35,6 +35,13 @@ bool checkStatus(uint32_t propertyId, HpStatus stat, bool throwException) {
     case HP_STATUS_DEVICE_RESPONSE_ERROR:
         retMsg = std::string("Request failed, device response with error, errorCode: ") + std::to_string(stat.respErrorCode) + ", msg: " + stat.msg
                  + ", propertyId: " + std::to_string(propertyId);
+        // Treat "unsupported request" (errorCode 2) as a non-fatal warning.
+        // The CR-Scan Ferret firmware returns this for many standard vendor properties
+        // it doesn't implement; throwing here prevents device initialization from completing.
+        if(stat.respErrorCode == HP_RESP_ERROR_UNSUPPORTED_REQUEST) {
+            LOG_WARN(retMsg);
+            return false;
+        }
         if(throwException) {
             THROW_IO_EXCEPTION_WITH_ERROR(retMsg, OB_ERROR_DEVICE_RESPONSE_ERROR);
         }
