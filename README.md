@@ -1,6 +1,47 @@
-# This is a fork of the Orbec SDK, adapted for support of the Creality CR scan ferret, the demo app works and uses all sensors of the 3d scanner.
+# CR-Scan Ferret support for Orbbec SDK v2 (Windows) — community fork
 
-This is not to say this is production code but has enough to show that with a bit of changes in the usb comunication this scanner could easily adapted to other more serious scanning software that support the Orbec SDK.
+> [!WARNING]
+> This is an unofficial **proof of concept**, not a supported product. It is not affiliated with, endorsed by, or supported by Orbbec or Creality. Use it at your own risk.
+
+## Why this fork exists
+
+The Creality CR-Scan Ferret is built by Orbbec and is essentially an Orbbec Gemini 215 depth camera. Out of the box it only works with Creality's own scanning app, because the Orbbec SDK does not recognise its USB ID (`2bc5:069c`).
+
+The goal of this fork is to **show that the Ferret can work with the standard Orbbec SDK** with a small amount of change. Then software that already supports Orbbec cameras could support it too. That includes RTAB-Map, Open3D, ROS 2, and other scanning or SLAM tools. We hope Orbbec, Creality, or the maintainers of that software will adopt proper support. This fork is the evidence that it is feasible, not a replacement for official support.
+
+## What to expect
+
+**Works (tested with OrbbecViewer v2.7.6 on Windows 11, firmware 1.2.2):**
+
+| Stream | Format | Resolution | Rate |
+|--------|--------|-----------|------|
+| Depth | Y16 (mm) | 1280x800 | 30 fps |
+| Color | MJPG | 1280x720 / 1920x1080 | 30 fps |
+| IR | Y8 | 1280x800 | 30 fps |
+| Accel / Gyro | IMU | — | ~200 Hz |
+| Point cloud | depth + color | 1280x800 | 30 fps |
+
+**Known limitations:**
+- **Windows x64 only.** Linux and macOS are not covered by this fork.
+- **Depth takes 5–8 seconds to fill in** after starting, while the projector warms up.
+- **Hardware depth-to-color alignment is not supported** by the firmware. Software alignment works.
+- **Color and depth timestamps are offset** by a few seconds, so timestamp-based sync is disabled.
+- **A few "Frame unpack failed" warnings** in the log when streams start are normal.
+- **Based on Orbbec SDK v2.7.6.** It does not include upstream fixes or new devices released since then.
+- **Not a scanning app.** You get the camera streams, not CrealityScan's meshing, texturing, or turntable features.
+
+**One part involves a binary patch.** Orbbec's depth-processing library (`ob_frame_processor.dll`) is closed source and only accepts a fixed list of devices. We change 6 bytes in it so it also accepts the Ferret's ID, replacing the entry for the Gemini 210. Without this patch, depth won't work. If Orbbec adds the Ferret's ID officially, the patch is no longer needed.
+
+## Trying it
+
+- **Easiest:** download the ready-made OrbbecViewer package from this repo's Releases, unzip it, plug the Ferret into a USB 3 port, and run `OrbbecViewer.exe`. No installation and no driver changes are needed. Your Creality software is not modified.
+- **From source:** build branch `cr-scan-ferret-win` with Visual Studio 2022 and CMake, then follow [docs/FERRET_WINDOWS_PORT.md](docs/FERRET_WINDOWS_PORT.md).
+
+For the technical background, see [docs/FERRET_SHORT.md](docs/FERRET_SHORT.md) (overview) and [docs/FERRET_WINDOWS_PORT.md](docs/FERRET_WINDOWS_PORT.md) (full details).
+
+---
+
+*The original Orbbec SDK README follows.*
 
 # Open Source Orbbec SDK
 
