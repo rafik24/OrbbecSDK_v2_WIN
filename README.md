@@ -1,3 +1,7 @@
+# This is a fork of the Orbec SDK, adapted for support of the Creality CR scan ferret, the demo app works and uses all sensors of the 3d scanner.
+
+This is not to say this is production code but has enough to show that with a bit of changes in the usb comunication this scanner could easily adapted to other more serious scanning software that support the Orbec SDK.
+
 # Open Source Orbbec SDK
 
 > [!IMPORTANT]
